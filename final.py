@@ -9,6 +9,8 @@ from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 import spacy
+import time
+from collections import Counter
 
 
 from sklearn.tree import DecisionTreeClassifier
@@ -174,7 +176,88 @@ print(clf_bayes.score(X_test, y_test))
 
 
 
-### tokenisation avec spacy
 
-doc_spacy = nlp(fichiers)
-fichiers = words = [token.text.lower() for token in fichiers if not token.is_punct and not token.is_space]
+
+### En réutilisant mon code du tp2, on peut comparer le POS de chaque critique
+
+
+print("\n" + "="*50)
+print("ANALYSE COMPARATIVE DES PARTIES DU DISCOURS (POS)")
+print("="*50)
+
+# Séparation des critiques positives et négatives
+critiques_positives = [contenus_train[i] for i, label in enumerate(y_train) if label == 1]
+critiques_negatives = [contenus_train[i] for i, label in enumerate(y_train) if label == 0]
+
+# Concaténer les critiques pour une analyse globale
+texte_positif = " ".join(critiques_positives)  # Limiter pour des raisons de performance
+texte_negatif = " ".join(critiques_negatives)  # Limiter pour des raisons de performance
+
+def analyze_pos(text, title):
+    """Analyse les parties du discours dans un texte"""
+    start_time = time.time()
+    
+    # Charger le modèle spaCy pour l'anglais
+    nlp = spacy.load('en_core_web_sm')
+    
+    # Traiter le texte avec spaCy
+    doc = nlp(text)
+    
+    # Compter les différentes parties du discours
+    pos_counts = Counter([token.pos_ for token in doc if not token.is_space])
+    total_tokens = sum(pos_counts.values())
+    
+    # Convertir en pourcentages
+    pos_proportions = {pos: count/total_tokens for pos, count in pos_counts.items()}
+    
+    execution_time = time.time() - start_time
+    print(f"Analyse POS pour {title} terminée en {execution_time:.2f} secondes")
+    
+    return pos_counts, pos_proportions
+
+# Analyser les deux ensembles de critiques
+print("\nAnalyse des parties du discours...")
+pos_counts_pos, pos_prop_pos = analyze_pos(texte_positif, "critiques positives")
+pos_counts_neg, pos_prop_neg = analyze_pos(texte_negatif, "critiques négatives")
+
+# Afficher les statistiques
+print("\nDistribution des parties du discours dans les critiques positives:")
+for pos, prop in sorted(pos_prop_pos.items(), key=lambda x: x[1], reverse=True):
+    print(f"{pos}: {prop*100:.1f}%")
+
+print("\nDistribution des parties du discours dans les critiques négatives:")
+for pos, prop in sorted(pos_prop_neg.items(), key=lambda x: x[1], reverse=True):
+    print(f"{pos}: {prop*100:.1f}%")
+
+# Créer un graphique de comparaison
+plt.figure(figsize=(14, 8))
+
+# Identifier toutes les catégories POS présentes
+all_pos = sorted(set(list(pos_prop_pos.keys()) + list(pos_prop_neg.keys())))
+x = range(len(all_pos))
+width = 0.35
+
+# Tracer les barres
+plt.bar([i - width/2 for i in x], 
+        [pos_prop_pos.get(pos, 0) * 100 for pos in all_pos], 
+        width, 
+        label="Critiques positives",
+        color='green',
+        alpha=0.7)
+plt.bar([i + width/2 for i in x], 
+        [pos_prop_neg.get(pos, 0) * 100 for pos in all_pos], 
+        width, 
+        label="Critiques négatives",
+        color='red',
+        alpha=0.7)
+
+# Ajouter les éléments de légende
+plt.title('Comparaison des parties du discours entre critiques positives et négatives')
+plt.ylabel('Pourcentage (%)')
+plt.xlabel('Parties du discours')
+plt.xticks(x, all_pos)
+plt.legend()
+plt.grid(axis='y', alpha=0.3)
+plt.tight_layout()
+plt.show()
+
