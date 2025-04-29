@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 # Ajout d'un modèle d'arbre de décision (DecisionTreeClassifier)
 from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.ensemble import RandomForestClassifier
 
 
 # Définition des chemins vers les dossiers de critiques
@@ -78,7 +79,7 @@ clf.predict(X_test)
 
 y_pred = clf.predict(X_test)
 print(classification_report(y_test, y_pred))
-
+print('score SVM')
 print(clf.score(X_test, y_test))
 
 
@@ -89,7 +90,7 @@ print(clf.score(X_test, y_test))
 
 clf_logistique = LogisticRegression(max_iter=8000)  # Utiliser 'liblinear' pour les petits ensembles de données
 clf_logistique.fit(X_train, y_train)  # y_train contient 0 ou 1
-
+print('score régression logistique')
 print(clf_logistique.score(X_test, y_test))  # y_test contient 0 ou 1
 
 # Obtenir les prédictions de la régression logistique
@@ -134,16 +135,12 @@ plt.show()
 #### Arbre de decisionn
 
 
-clf_tree = DecisionTreeClassifier(criterion='entropy')  # ou 'gini'
+clf_tree = DecisionTreeClassifier(criterion='entropy', max_depth=6)  # ou 'gini'
 clf_tree.fit(X_train, y_train)
 y_pred_tree = clf_tree.predict(X_test)
-print(classification_report(y_test, y_pred_tree))
+print('score arbre de decision')
 print(clf_tree.score(X_test, y_test))
-# Visualisation de l'arbre de décision
-plt.figure(figsize=(20, 10))
-plot_tree(clf_tree, filled=True, feature_names=vectorizer.get_feature_names_out(), class_names=["Négatif", "Positif"])
-plt.title("Arbre de décision pour la classification des critiques de films")
-plt.show()
+
 
 # Affichage des 10 premiers mots les plus fréquents
 # Obtenir les indices des 10 premiers mots les plus fréquents
@@ -160,3 +157,20 @@ plt.title('Importance des 10 mots les plus fréquents dans l\'arbre de décision
 plt.grid(axis='x', alpha=0.3)
 plt.tight_layout()
 plt.show()
+
+
+### random Forest classifeur 
+clf_forest = RandomForestClassifier(criterion='entropy', max_depth=6)  # ou 'gini'
+clf_forest.fit(X_train, y_train)
+y_pred_forest = clf_tree.predict(X_test)
+print('score random forest')
+print(clf_forest.score(X_test, y_test))
+
+
+## modele bayesien naif
+from sklearn.naive_bayes import MultinomialNB
+clf_bayes = MultinomialNB()
+clf_bayes.fit(X_train, y_train)
+y_pred_bayes = clf_bayes.predict(X_test)
+print('score bayesien')
+print(clf_bayes.score(X_test, y_test))
